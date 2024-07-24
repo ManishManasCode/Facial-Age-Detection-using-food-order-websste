@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Age Detection</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://pyscript.net/releases/2024.1.1/core.css"
+    />
+    <script
+      type="module"
+      src="https://pyscript.net/releases/2024.1.1/core.js"
+    ></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Age Detection from Webcam</h1>
+      <div id="ageOutput"></div>
+      <video id="videoElement" width="640" height="480" autoplay></video>
+      <script type="module">
+        import { PyScript } from "https://pyscript.net/releases/2024.1.1/core.js";
+
+        async function startVideo() {
+          const videoElement = document.getElementById("videoElement");
+          if (navigator.mediaDevices.getUserMedia) {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: {},
+            });
+            videoElement.srcObject = stream;
+          }
+        }
+
+        async function checkAge() {
+          const ageInput = document.getElementById("ageInput");
+          const age = ageInput.value;
+          const pyscript = new PyScript();
+          await pyscript.run(`age = ${age}`);
+          await pyscript.run(`
+          import cv2
+
+          def highlightFace(faceNet, frame):
+              # Your highlightFace function implementation here
+
+          # Load face detection model
+          faceProto = "opencv_face_detector.pbtxt"
+          faceModel = "opencv_face_detector_uint8.pb"
+          faceNet=cv2.dnn.readNet(faceModel, faceProto)
+
+          # Capture video from webcam
+          video = cv2.VideoCapture(0)
+
+          while cv2.waitKey(1) < 0:
+              hasFrame, frame = video.read()
+              if not hasFrame:
+                  cv2.waitKey()
+                  break
+
+              resultImg, faceBoxes = highlightFace(faceNet, frame)
+              if not faceBoxes:
+                  print("No face detected")
+
+              for bbox in faceBoxes:
+                  face = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+                  # Your age estimation code here
+                  cv2.putText(frame, f"Age: {age}", (bbox[0], bbox[1]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+
+              cv2.imshow("Age Detection", frame)
+              if cv2.waitKey(1) & 0xFF == ord('q'):
+                  break 
+
+          video.release()
+          cv2.destroyAllWindows()
+        `);
+        }
+
+        startVideo();
+      </script>
+      <div>
+        <label for="ageInput">Enter your age:</label>
+        <input type="number" id="ageInput" />
+        <button onclick="checkAge()">Check Age</button>
+      </div>
+    </div>
+  </body>
+</html>

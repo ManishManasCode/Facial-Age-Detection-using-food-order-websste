@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Website</title>
+    <!-- <link rel="stylesheet" href="/static/styles.css" /> -->
+    <style>
+      .container {
+        text-align: center;
+        margin-top: 100px;
+      }
+
+      input[type="number"] {
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      li {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .content {
+        filter: blur(5px);
+      }
+
+      .content.show {
+        filter: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to our Food Website</h1>
+      <p>Please enter your age to continue:</p>
+      <input type="number" id="ageInput" placeholder="Enter your age" />
+      <button onclick="checkAge()">Enter</button>
+      <img src="{{ url_for('video_feed') }}" alt="Video Feed" />
+      <!-- <video id="video" width="640" height="480" autoplay></video> -->
+      <div id="content" class="content">
+        <h2>Delicious Recipes</h2>
+        <ul>
+          <li>Pizza</li>
+          <li>Burgers</li>
+          <li>Pasta</li>
+          <li>Sushi</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      function checkAge() {
+        var ageInput = document.getElementById("ageInput").value;
+        var contentDiv = document.getElementById("content");
+
+        if (ageInput >= 18) {
+          contentDiv.classList.add("show");
+          startWebcamScan();
+        } else {
+          contentDiv.classList.remove("show");
+        }
+        contentDiv.classList.add("blur");
+      }
+
+      function startWebcamScan() {
+        const video = document.getElementById("video");
+
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then(function (stream) {
+            video.srcObject = stream;
+            setTimeout(stopWebcamScan, 5000); // Stop scanning after 5 seconds
+          })
+          .catch(function (err) {
+            console.error("Error accessing webcam: " + err);
+          });
+      }
+
+      function stopWebcamScan() {
+        const video = document.getElementById("video");
+        const contentDiv = document.getElementById("content");
+
+        video.pause();
+        video.srcObject.getTracks().forEach((track) => track.stop());
+        contentDiv.classList.remove("blur");
+      }
+    </script>
+  </body>
+</html>

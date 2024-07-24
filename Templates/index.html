@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Website</title>
+    <style>
+      .container {
+        text-align: center;
+        margin-top: 100px;
+      }
+
+      input[type="number"] {
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      li {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .content {
+        filter: blur(5px);
+      }
+
+      .content.show {
+        filter: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to our Food Website</h1>
+      <p>Please enter your age to continue:</p>
+      <input type="number" id="ageInput" placeholder="Enter your age" />
+      <button onclick="checkAge()">Enter</button>
+      <img src="{{ url_for('video_feed') }}" alt="Video Feed" />
+      <!-- <video id="video" style="display: none"></video>
+      <canvas id="canvas" style="display: none"></canvas> -->
+      <div id="content" class="content" style="display: none">
+        <h2>Delicious Recipes</h2>
+        <ul>
+          <li>Pizza</li>
+          <li>Burgers</li>
+          <li>Pasta</li>
+          <li>Sushi</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      async function checkAge() {
+        var ageInput = document.getElementById("ageInput").value;
+        var contentDiv = document.getElementById("content");
+        if (ageInput >= 18) {
+          // Show the webcam feed
+          var video = document.getElementById("video");
+          var canvas = document.getElementById("canvas");
+          var constraints = { video: true };
+
+          navigator.mediaDevices
+            .getUserMedia(constraints)
+            .then(function (stream) {
+              video.srcObject = stream;
+              video.play();
+              setTimeout(function () {
+                // After 5 seconds, capture an image
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas
+                  .getContext("2d")
+                  .drawImage(video, 0, 0, canvas.width, canvas.height);
+                var imageDataURL = canvas.toDataURL("image/jpeg");
+
+                // Send the image data to Flask for age detection
+                fetch("/detect_age", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ image_data: imageDataURL }),
+                })
+                  .then((response) => {
+                    if (response.ok) {
+                      return response.json();
+                    } else {
+                      throw new Error("Age detection failed");
+                    }
+                  })
+                  .then((data) => {
+                    if (data.age >= 18) {
+                      // User is 18 or above, show delicious recipes
+                      contentDiv.style.display = "block";
+                    } else {
+                      // User is below 18, hide recipes
+                      contentDiv.style.display = "none";
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error:", error);
+                  });
+              }, 5000);
+            })
+            .catch(function (error) {
+              console.error("getUserMedia error:", error);
+            });
+        } else {
+          // User is below 18, hide recipes
+          contentDiv.style.display = "none";
+        }
+      }
+    </script>
+  </body>
+</html>
